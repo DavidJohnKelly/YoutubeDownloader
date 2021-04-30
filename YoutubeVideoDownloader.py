@@ -10,7 +10,11 @@ import shutil
 
 #Getting the location of the py file and creating the initial directory to store the downloads
 path = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
-os.mkdir(path + "\\Download\\")
+try:
+    os.mkdir(path + "\\Download\\")
+except:
+    print("")
+        
 dir_path = path + "\\Download\\" + str(date.today()) +"_"+ str(datetime.now().strftime("%H-%M-%S"))
 os.mkdir(dir_path)
 
