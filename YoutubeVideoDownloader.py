@@ -31,17 +31,21 @@ if "/playlist?" in url:
     #Downloads each video with pafy
     for item in playlist["entries"]:
         print(item["title"])
-        src=pafy.new(item["webpage_url"])
-        if file_type == "1":
-            video = src.getbest()
-            video.download(filepath = dir_path)
-        elif file_type == "2":
-            audio = src.getbestaudio()
-            audio.download(filepath = dir_path)
-        else:
-            print("Invalid input")
-
-        
+        url_item = item["webpage_url"]
+        print(url_item)
+        try:
+            src=pafy.new(url_item)
+            if file_type == "1":
+                video = src.getbest()
+                video.download(filepath = dir_path)
+            elif file_type == "2":
+                audio = src.getbestaudio()
+                audio.download(filepath = dir_path)
+            else:
+                print("Invalid input")
+            print("")
+        except:
+            print("Couldn't download " + item["title"])
 else:
     #Downloads the video with pafy
     src=pafy.new(url)
