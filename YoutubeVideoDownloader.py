@@ -1,11 +1,11 @@
+import os
+import shutil
+import zipfile
+from datetime import date
+from datetime import datetime
+
 import pafy
 from youtube_dl import YoutubeDL
-import os
-import zipfile
-import sys
-from datetime import datetime
-from datetime import date
-import shutil
 
 # Getting the location of the py file and creating the initial directory to store the downloads
 path = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
