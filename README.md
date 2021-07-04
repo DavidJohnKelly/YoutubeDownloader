@@ -54,6 +54,6 @@ MIT
 
 
    [YoutubeDL]: <https://github.com/ytdl-org/youtube-dl>
-   [SimpleHTR]: <https://github.com/githubharald/SimpleHTR>
+   [Pafy]: <https://github.com/mps-youtube/pafy>
    
 
