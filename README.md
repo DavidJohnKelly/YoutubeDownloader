@@ -30,7 +30,7 @@ pip install -r (Path)\YoutubeVideoDownloader\requirements.txt
 ## Usage
 
   1. Copy a link to a youtube video or playlist.
-    1a. Due to issues with Pafy, any videos that have comments or likes disabled are unable to be downloaded
+    1a. Due to issues with Pafy, any videos that have comments disabled are unable to be downloaded
   2. Paste this into the console once prompted.
   3. Enter 1 for video and 2 for only audio
   4. Specify required file extension from provided options
