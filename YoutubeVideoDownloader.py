@@ -3,110 +3,100 @@ import shutil
 import zipfile
 from datetime import date
 from datetime import datetime
-
-import pafy
-from youtube_dl import YoutubeDL
-
-# Getting the location of the py file and creating the initial directory to store the downloads
-path = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
-try:
-    os.mkdir(path + "\\Download\\")
-except:
-    print("")
-
-dir_path = path + "\\Download\\" + str(date.today()) + "_" + str(datetime.now().strftime("%H-%M-%S"))
-os.mkdir(dir_path)
-
-url = input("Enter the playlist or video URL: ")
-file_extension = ""
-file_valid = False
-while not file_valid:
-    file_type = input("Enter 1 for video and 2 for only audio: ")
-    if file_type == "1":
-
-        valid = False
-        while not valid:
-            extension = input("Enter the required file extension (MP4, MOV, AVI, MKV, WMV, WEBM): ").lower()
-            if extension == "mp4" or extension == "mov" or extension == "avi" or extension == "mkv" or extension == "wmv" or extension == "webm":
-                file_extension = extension
-                valid = True
-            else:
-                print("Enter a valid extension")
-        file_valid = True
-
-    elif file_type == "2":
-
-        valid = False
-        while not valid:
-            extension = input("Enter the required file extension (MP3, WAV, AAC, OGG, WMA, FLAC, M4A): ").lower()
-            if extension == "mp3" or extension == "wav" or extension == "aac" or extension == "ogg" or extension == "wma" or extension == "flac" or extension == "m4a":
-                file_extension = extension
-                valid = True
-            else:
-                print("Enter a valid extension")
-        file_valid = True
-
-    else:
-        print("Enter a valid type")
-
-zipbool = input("Enter 1 to zip the files, anything else to leave files in a folder: ")
+import requests
+from pytube import YouTube
+from pytube import Playlist
+from pytube.cli import on_progress
+from pathlib import Path
 
 
-def filetypechange():
-    for count, filename in enumerate(os.listdir(dir_path)):
-        # Gets the original file path
-        src = dir_path + "\\" + filename
-        # Gets the name of the file without the old extension and appends the new extension
-        dst = os.path.splitext(src)[0] + "." + file_extension
-        os.rename(src, dst)
+def validURL(url):
+    pattern = '"playabilityStatus":{"status":"ERROR","reason":"Video unavailable"'
+    request = requests.get(url)
+    if pattern in request.text or "youtube.com/" not in url:
+        return False
+    return True
 
 
-# Checks for difference between playlist url and video url
-if "/playlist?" in url:
+def getURL():
+    url = ""
+    urlValid = False
+    while not urlValid:
+        url = input("Enter the playlist or video URL: ")
+        if (validURL(url)):
+            urlValid = True
+        else:
+            print("Please enter a valid URL")
+    return url
 
-    # Using YoutubeDL to get url of each video in playlist due to unfixed issues with pafy get_playlist and get_playlist2 methods
-    playlist = YoutubeDL().extract_info(url, download=False)
-    print(playlist["title"])
-    print("")
-    # Downloads each video with pafy
-    for item in playlist["entries"]:
-        print(item["title"])
-        url_item = item["webpage_url"]
-        print(url_item)
+
+def getFileType():
+    fileType = ""
+    intType = 0
+    typeValid = False
+    while not typeValid:
+        fileType = input("Enter 1 for video and 2 for only audio: ")
         try:
-            src = pafy.new(url_item)
-            if file_type == "1":
-                video = src.getbest()
-                video.download(filepath=dir_path)
-            elif file_type == "2":
-                audio = src.getbestaudio()
-                audio.download(filepath=dir_path)
+            intType = int(fileType)
+            if intType == 1 or intType == 2:
+                typeValid = True
             else:
-                print("Invalid input")
-            print("")
-        except Exception as e:
-            print("Couldn't download " + item["title"])
-            print(e)
-
-else:
-
-    # Downloads the video with pafy
-    src = pafy.new(url)
-    print(src.title)
-    if file_type == "1":
-        video = src.getbest()
-        video.download(filepath=dir_path)
-    elif file_type == "2":
-        audio = src.getbestaudio()
-        audio.download(filepath=dir_path)
-    else:
-        print("Invalid input")
-
-# Changes all other file types to the specified file type
-filetypechange()
+                print("Enter a valid file type")
+        except:
+            print("Enter a valid file type")
+    return intType
 
 
-def filezip():
+def getVideoFileExtension():
+    fileExtension = ""
+    extensionValid = False
+    while not extensionValid:
+        fileExtension = input("Enter required file extension: ")
+        if fileExtension == "mp4" or fileExtension == "mov" or fileExtension == "avi" or fileExtension == "mkv" or fileExtension == "wmv" or fileExtension == "webm":
+            extensionValid = True
+        else:
+            print("Enter a valid file extension")
+    return fileExtension
+
+
+def getAudioFileExtension():
+    fileExtension = ""
+    extensionValid = False
+    while not extensionValid:
+        fileExtension = input("Enter required file extension: ")
+        if fileExtension == "mp3" or fileExtension == "wav" or fileExtension == "aac" or fileExtension == "ogg" or fileExtension == "wma" or fileExtension == "flac" or fileExtension == "m4a":
+            extensionValid = True
+        else:
+            print("Enter a valid file extension")
+    return fileExtension
+
+
+def getFileExtension(fileType):
+    fileExtension = ""
+    if fileType == 1:
+        fileExtension = getVideoFileExtension()
+    elif fileType == 2:
+        fileExtension = getAudioFileExtension()
+    return fileExtension.lower()
+
+
+def getDownloadFolder():
+    basePath = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
+    downloadPath = basePath + "\\Download\\"
+    if not os.path.exists(downloadPath):
+        os.mkdir(downloadPath)
+    return downloadPath
+
+
+def makeCurrentDownloadFolder(downloadPath):
+    # Getting the location of the py file and creating the initial directory to store the downloads
+    directoryTime = str(date.today()) + "_" + str(datetime.now().strftime("%H-%M-%S"))
+    dir_path = downloadPath + directoryTime
+    os.mkdir(dir_path)
+    return dir_path
+
+
+def filezip(dir_path):
     # Zips up the directory and deletes the original directory
     zip_path = dir_path + ".zip"
     contents = os.walk(dir_path)
@@ -123,5 +113,148 @@ def filezip():
     shutil.rmtree(dir_path)
 
 
-if zipbool == "1":
-    filezip()
+def getZipBool():
+    zipbool = input("Enter 1 to zip the files, anything else to leave files in a folder: ")
+    if zipbool == "1":
+        return True
+    return False
+
+
+def getPlaylistBool(url):
+    if "/playlist?" in url:
+        return True
+    return False
+
+
+def getValidPlaylistStart(playlistLength):
+    start = ""
+    intStart = 0
+    startValid = False
+    while not startValid:
+        start = input("Enter a playlist lower bound (Leave empty for no lower bound): ")
+        if start == "":
+            return 1
+        try:
+            intStart = int(start)
+            if intStart <= playlistLength:
+                startValid = True
+            else:
+                print("Enter a valid playlist lower bound")
+        except:
+            print("Enter a valid playlist lower bound")
+    return intStart
+
+
+def getValidPlaylistEnd(playlistLength, playlistStart):
+    end = ""
+    intEnd = 0
+    endValid = False
+    while not endValid:
+        end = input("Enter a playlist upper bound (Leave empty for no upper bound): ")
+        if end == "":
+            return playlistLength
+        try:
+            intEnd = int(end)
+            if intEnd <= playlistLength and intEnd >= playlistStart:
+                endValid = True
+            else:
+                print("Enter a valid playlist upper bound")
+        except:
+            print("Enter a valid playlist upper bound")
+    return intEnd
+
+
+def getPlaylistRange(playlist):
+    playlistLength = len(playlist)
+    playlistStart = getValidPlaylistStart(playlistLength)
+    playlistEnd = getValidPlaylistEnd(playlistLength, playlistStart)
+    return [playlistStart, playlistEnd]
+
+
+def fileTypeChange(filepath, file_extension):
+    p = Path(filepath)
+    p.rename(p.with_suffix(f".{file_extension}"))
+
+def printDownloading(video, youtube):
+    try:
+        print(f"Downloading {youtube.title}")
+    except:
+        print(f"Downloading {video.title().lower()}")
+def downloadVideoFormat(video, extension, downloadPath):
+    youtube = YouTube(video, on_progress_callback=on_progress)
+    printDownloading(video, youtube)
+    try:
+        stream = youtube.streams.filter(file_extension=extension)
+        filePath = stream.get_highest_resolution().download(downloadPath)
+    except:
+        print("Couldn't download the requested format")
+        print("Attempting automated conversion")
+        stream = youtube.streams.get_highest_resolution()
+        filePath = stream.download(downloadPath)
+        fileTypeChange(filePath, extension)
+
+
+def downloadAudioFormat(video, extension, downloadPath):
+    youtube = YouTube(video, on_progress_callback=on_progress)
+    printDownloading(video, youtube)
+    try:
+        stream = youtube.streams.get_audio_only(extension)
+        filePath = stream.download(downloadPath)
+    except:
+        print("Couldn't download the requested format")
+        print("Attempting automated conversion")
+        stream = youtube.streams.get_audio_only()
+        filePath = stream.download(downloadPath)
+        fileTypeChange(filePath, extension)
+
+
+def downloadPlaylist(playlist, downloadPath):
+    playlistRange = getPlaylistRange(playlist)
+    playlistStart = playlistRange[0] - 1
+    playlistEnd = playlistRange[1] - 1
+    fileType = getFileType()
+    fileExtension = getFileExtension(fileType)
+
+    if fileType == 1:
+        if playlistStart == playlistEnd:
+            video = playlist[playlistStart]
+            downloadVideoFormat(video, fileExtension, downloadPath)
+        for x in range(playlistStart, playlistEnd + 1):
+            video = playlist[x]
+            downloadVideoFormat(video, fileExtension, downloadPath)
+    elif fileType == 2:
+        if playlistStart == playlistEnd:
+            video = playlist[playlistStart]
+            downloadAudioFormat(video, fileExtension, downloadPath)
+        for x in range(playlistStart, playlistEnd + 1):
+            video = playlist[x]
+            downloadAudioFormat(video, fileExtension, downloadPath)
+
+
+def downloadVideo(video, downloadPath):
+    fileType = getFileType()
+    fileExtension = getFileExtension(fileType)
+    if fileType == 1:
+        downloadVideoFormat(video, fileExtension, downloadPath)
+    elif fileType == 2:
+        downloadAudioFormat(video, fileExtension, downloadPath)
+
+
+def main():
+    downloadPath = getDownloadFolder()
+    currentDownloadPath = makeCurrentDownloadFolder(downloadPath)
+    url = getURL()
+    playlistBool = getPlaylistBool(url)
+    zipBool = getZipBool()
+    if playlistBool:
+        playlist = Playlist(url)
+        downloadPlaylist(playlist, currentDownloadPath)
+    else:
+        downloadVideo(url, currentDownloadPath)
+
+    if zipBool:
+      filezip(currentDownloadPath)
+
+
+if __name__ == "__main__":
+    main()
