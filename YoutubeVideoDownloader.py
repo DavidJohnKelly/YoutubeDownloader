@@ -3,11 +3,13 @@ import shutil
 import zipfile
 from datetime import date
 from datetime import datetime
-import requests
-from pytube import YouTube
-from pytube import Playlist
-from pytube.cli import on_progress
 from pathlib import Path
+from threading import Thread
+
+import requests
+from pytube import Playlist
+from pytube import YouTube
+from pytube.cli import on_progress
 
 
 def validURL(url):
@@ -175,11 +177,14 @@ def fileTypeChange(filepath, file_extension):
     p = Path(filepath)
     p.rename(p.with_suffix(f".{file_extension}"))
 
+
 def printDownloading(video, youtube):
     try:
         print(f"Downloading {youtube.title}")
     except:
         print(f"Downloading {video.title().lower()}")
+
+
 def downloadVideoFormat(video, extension, downloadPath):
     youtube = YouTube(video, on_progress_callback=on_progress)
     printDownloading(video, youtube)
@@ -214,21 +219,30 @@ def downloadPlaylist(playlist, downloadPath):
     playlistEnd = playlistRange[1] - 1
     fileType = getFileType()
     fileExtension = getFileExtension(fileType)
-
+    threads = []
     if fileType == 1:
         if playlistStart == playlistEnd:
             video = playlist[playlistStart]
             downloadVideoFormat(video, fileExtension, downloadPath)
         for x in range(playlistStart, playlistEnd + 1):
             video = playlist[x]
-            downloadVideoFormat(video, fileExtension, downloadPath)
+            thread = Thread(target=downloadVideoFormat, args=(video, fileExtension, downloadPath))
+            thread.start()
+            threads.append(thread)
     elif fileType == 2:
         if playlistStart == playlistEnd:
             video = playlist[playlistStart]
             downloadAudioFormat(video, fileExtension, downloadPath)
+
         for x in range(playlistStart, playlistEnd + 1):
             video = playlist[x]
-            downloadAudioFormat(video, fileExtension, downloadPath)
+            thread = Thread(target=downloadAudioFormat, args=(video, fileExtension, downloadPath))
+            thread.start()
+            threads.append(thread)
+
+    for x in range(playlistStart, playlistEnd + 1):
+        threads[x].join()
+
 
 
 def downloadVideo(video, downloadPath):
@@ -253,7 +267,7 @@ def main():
         downloadVideo(url, currentDownloadPath)
 
     if zipBool:
-      filezip(currentDownloadPath)
+        filezip(currentDownloadPath)
 
 
 if __name__ == "__main__":
