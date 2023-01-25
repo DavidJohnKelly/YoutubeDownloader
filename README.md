@@ -32,6 +32,8 @@ pip install -r (Path)\YoutubeVideoDownloader\requirements.txt
   1. Copy a link to a youtube video or playlist.
     1a. Due to issues with Pafy, any videos that have comments disabled are unable to be downloaded
   2. Paste this into the console once prompted.
+    2a. If you are downloading a playlist, first enter the required video to start downloading from
+    2b. Then specify the final video to download to
   3. Enter 1 for video and 2 for only audio
   4. Specify required file extension from provided options
   5. Enter whether you want the files to be compressed into a zip file, or remain in a folder
