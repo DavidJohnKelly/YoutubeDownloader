@@ -133,12 +133,14 @@ def getValidPlaylistStart(playlistLength):
     intStart = 0
     startValid = False
     while not startValid:
-        start = input("Enter a playlist lower bound (Leave empty for no lower bound): ")
+        start = input("Enter a playlist lower bound (Leave empty for no lower bound, or enter a negative number to count backwards from the end): ")
         if start == "":
-            return 1
+            return 1  
         try:
             intStart = int(start)
-            if intStart <= playlistLength:
+            if intStart < 0 and (intStart * -1) <= playlistLength:
+                return playlistLength + intStart
+            elif intStart <= playlistLength and intStart > 0:
                 startValid = True
             else:
                 print("Enter a valid playlist lower bound")
@@ -240,8 +242,8 @@ def downloadPlaylist(playlist, downloadPath):
             thread.start()
             threads.append(thread)
 
-    for x in range(playlistStart, playlistEnd + 1):
-        threads[x].join()
+    for thread in threads:
+        thread.join()
 
 
 
