@@ -14,8 +14,7 @@
 
 Youtube Downloader uses a number of open source projects to work properly:
 
-- [YoutubeDL] - used to extract playlist data
-- [Pafy] - used to download the video or audio for each video
+- [PyTube] - used to extract youtube video data and download them
 
 ## Installation
 
@@ -55,7 +54,6 @@ MIT
 **Free to use however you want!**
 
 
-   [YoutubeDL]: <https://github.com/ytdl-org/youtube-dl>
-   [Pafy]: <https://github.com/mps-youtube/pafy>
+   [PyTube]: <https://github.com/pytube/pytube>
    
 
