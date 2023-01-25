@@ -4,7 +4,7 @@
 
 ## Features
 
-- Download a full playlist or just a single video
+- Download a full playlist, part of a playlist, or just a single video
 - Download either audio or video
 - Specify file extensions
 - Zip files if required
@@ -15,6 +15,7 @@
 Youtube Downloader uses a number of open source projects to work properly:
 
 - [PyTube] - used to extract youtube video data and download them
+- [Requests] - used to help check whether the provided URL is valid
 
 ## Installation
 
@@ -55,5 +56,6 @@ MIT
 
 
    [PyTube]: <https://github.com/pytube/pytube>
+   [Requests]: <https://github.com/psf/requests>
    
 
