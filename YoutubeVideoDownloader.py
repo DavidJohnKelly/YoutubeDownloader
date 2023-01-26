@@ -125,7 +125,7 @@ def get_playlist_start(playlist_length):
             "backwards from the end): "
         )
         if start == "":
-            return 1
+            return 0
         try:
             int_start = int(start)
             if int_start < 0 and abs(int_start) <= playlist_length:
@@ -136,7 +136,7 @@ def get_playlist_start(playlist_length):
                 print("Enter a valid playlist lower bound")
         except ValueError:
             print("Enter a valid playlist lower bound")
-    return int_start
+    return int_start - 1
 
 
 def get_playlist_end(playlist_length, playlist_start):
@@ -155,13 +155,6 @@ def get_playlist_end(playlist_length, playlist_start):
         except ValueError:
             print("Enter a valid playlist upper bound")
     return int_end
-
-
-def get_playlist_range(playlist):
-    playlist_length = len(playlist)
-    playlist_start = get_playlist_start(playlist_length)
-    playlist_end = get_playlist_end(playlist_length, playlist_start)
-    return [playlist_start, playlist_end]
 
 
 def change_file_type(file_path, file_extension):
@@ -210,13 +203,13 @@ def download(video, extension, download_path, file_type):
 
 
 def download_playlist(playlist, download_path):
-    playlist_range = get_playlist_range(playlist)
-    playlist_start = playlist_range[0] - 1
-    playlist_end = playlist_range[1] - 1
+    playlist_length = len(playlist)
+    playlist_start = get_playlist_start(playlist_length)
+    playlist_end = get_playlist_end(playlist_length, playlist_start)
     file_type = get_file_type()
     file_extension = get_file_extension(file_type)
     threads = []
-    for x in range(playlist_start, playlist_end + 1):
+    for x in range(playlist_start, playlist_end):
         video = playlist[x]
         thread = Thread(target=download, args=(video, file_extension, download_path, file_type))
         thread.start()
