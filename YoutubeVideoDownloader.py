@@ -18,11 +18,14 @@ FILE_EXTENSIONS = [["mp4", "mov", "avi", "mkv", "wmv", "webm"], ["mp3", "wav", "
 
 
 def valid_url(url):
-    pattern = '"playabilityStatus":{"status":"ERROR","reason":"Video unavailable"'
-    request = requests.get(url)
-    if pattern in request.text or "youtube.com/" not in url:
-        return False
-    return True
+    try:
+        request = requests.get(url)
+        pattern = '"playabilityStatus":{"status":"ERROR","reason":"Video unavailable"'
+        if "youtube.com/" in url and pattern not in request.text:
+            return True
+    except Exception as e:
+        print(e)
+    return False
 
 
 def get_url():
