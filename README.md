@@ -4,7 +4,7 @@
 
 ## Features
 
-- Download a full playlist or just a single video
+- Download a full playlist, part of a playlist, or just a single video
 - Download either audio or video
 - Specify file extensions
 - Zip files if required
@@ -14,8 +14,8 @@
 
 Youtube Downloader uses a number of open source projects to work properly:
 
-- [YoutubeDL] - used to extract playlist data
-- [Pafy] - used to download the video or audio for each video
+- [PyTube] - used to extract youtube video data and download them
+- [Requests] - used to help check whether the provided URL is valid
 
 ## Installation
 
@@ -32,6 +32,8 @@ pip install -r (Path)\YoutubeVideoDownloader\requirements.txt
   1. Copy a link to a youtube video or playlist.
     1a. Due to issues with Pafy, any videos that have comments disabled are unable to be downloaded
   2. Paste this into the console once prompted.
+    2a. If you are downloading a playlist, first enter the required video to start downloading from
+    2b. Then specify the final video to download to
   3. Enter 1 for video and 2 for only audio
   4. Specify required file extension from provided options
   5. Enter whether you want the files to be compressed into a zip file, or remain in a folder
@@ -53,7 +55,7 @@ MIT
 **Free to use however you want!**
 
 
-   [YoutubeDL]: <https://github.com/ytdl-org/youtube-dl>
-   [Pafy]: <https://github.com/mps-youtube/pafy>
+   [PyTube]: <https://github.com/pytube/pytube>
+   [Requests]: <https://github.com/psf/requests>
    
 

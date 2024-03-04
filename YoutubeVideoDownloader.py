@@ -8,7 +8,7 @@ from pytubefix import YouTube
 from pytubefix import Playlist
 from pytubefix import Channel
 
-
+# Change all files of incorrect type to the specified type
 def filetypechange(dir_path, file_extension):
     for count, filename in enumerate(os.listdir(dir_path)):
         # Gets the original file path
@@ -27,10 +27,10 @@ def filezip(dir_path):
     for root, folders, files in contents:
         for file_name in files:
             absolute_path = os.path.join(root, file_name)
-            relative_path = absolute_path.replace(dir_path + '\\', '')
-            print("Adding '%s' to archive." % absolute_path)
+            relative_path = absolute_path.replace(directory_path + '\\', '')
+            print(f"Adding {absolute_path} to archive.")
             zip_file.write(absolute_path, relative_path)
-    print("'%s' created successfully." % zip_path)
+    print(f"{zip_path} created successfully.")
     zip_file.close()
     # Deletes the original folder
     shutil.rmtree(dir_path)
@@ -49,6 +49,7 @@ def get_download_folder(path) -> str:
         exit(-1)
 
 
+# Get a valid file extension from the user
 def get_valid_file_extension(*extensions) -> str:
     extension_str = ', '.join(extensions)
     while True:
@@ -63,6 +64,7 @@ class FileType:
     Video = 1
     Audio = 2
 
+# Get a valid file type from the user
 def get_file_type() -> FileType:
     while True:
         file_type = input("Enter 1 for video and 2 for only audio: ")
@@ -74,6 +76,7 @@ def get_file_type() -> FileType:
             print("Enter a valid type")
 
 
+# Get whether the user wants the files to be zipped up
 def get_zip_bool() -> bool:
     zip_str = input("Enter 1 to zip the files, anything else to leave files in a folder: ")
     if zip_str == '1':
@@ -82,6 +85,7 @@ def get_zip_bool() -> bool:
         return False
 
 
+# Get the highest quality audio stream available, of requested type if available
 def get_audio_stream(yt, target_extension):
     stream = yt.streams.get_audio_only(target_extension)
     if stream:
@@ -91,6 +95,7 @@ def get_audio_stream(yt, target_extension):
         return yt.streams.get_audio_only()
 
 
+# Get the highest quality video stream available that has embedded audio audio, of requested type if available
 def get_video_stream(yt, target_extension):
     streams = yt.streams.filter(file_extension=target_extension, progressive=True)
     if streams:
@@ -101,6 +106,7 @@ def get_video_stream(yt, target_extension):
         return streams.get_highest_resolution()
 
 
+# Download a single video from a specified url
 def download_single(url, file_type, target_extension, dir_path):
     yt = YouTube(url)
     print(f"Downloading: {yt.title}")
@@ -119,6 +125,7 @@ def download_single(url, file_type, target_extension, dir_path):
         print(e)
 
 
+# Download all videos from a given channel
 def download_channel(url, file_type, target_extension, dir_path):
     channel = Channel(url)
     print(f'Downloading videos by: {channel.channel_name}')
@@ -127,6 +134,7 @@ def download_channel(url, file_type, target_extension, dir_path):
         download_single(url, file_type, target_extension, dir_path)
 
 
+# Download all videos from a given playlist
 def download_playlist(playlist_url, file_type, target_extension, dir_path):
     playlist = Playlist(playlist_url)
     print(f"Downloading videos from {playlist.title}")
