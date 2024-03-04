@@ -4,55 +4,12 @@ import zipfile
 from datetime import date
 from datetime import datetime
 
-import pafy
-from youtube_dl import YoutubeDL
-
-# Getting the location of the py file and creating the initial directory to store the downloads
-path = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
-try:
-    os.mkdir(path + "\\Download\\")
-except:
-    print("")
-
-dir_path = path + "\\Download\\" + str(date.today()) + "_" + str(datetime.now().strftime("%H-%M-%S"))
-os.mkdir(dir_path)
-
-url = input("Enter the playlist or video URL: ")
-file_extension = ""
-file_valid = False
-while not file_valid:
-    file_type = input("Enter 1 for video and 2 for only audio: ")
-    if file_type == "1":
-
-        valid = False
-        while not valid:
-            extension = input("Enter the required file extension (MP4, MOV, AVI, MKV, WMV, WEBM): ").lower()
-            if extension == "mp4" or extension == "mov" or extension == "avi" or extension == "mkv" or extension == "wmv" or extension == "webm":
-                file_extension = extension
-                valid = True
-            else:
-                print("Enter a valid extension")
-        file_valid = True
-
-    elif file_type == "2":
-
-        valid = False
-        while not valid:
-            extension = input("Enter the required file extension (MP3, WAV, AAC, OGG, WMA, FLAC, M4A): ").lower()
-            if extension == "mp3" or extension == "wav" or extension == "aac" or extension == "ogg" or extension == "wma" or extension == "flac" or extension == "m4a":
-                file_extension = extension
-                valid = True
-            else:
-                print("Enter a valid extension")
-        file_valid = True
-
-    else:
-        print("Enter a valid type")
-
-zipbool = input("Enter 1 to zip the files, anything else to leave files in a folder: ")
+from pytubefix import YouTube
+from pytubefix import Playlist
+from pytubefix import Channel
 
 
-def filetypechange():
+def filetypechange(dir_path, file_extension):
     for count, filename in enumerate(os.listdir(dir_path)):
         # Gets the original file path
         src = dir_path + "\\" + filename
@@ -61,56 +18,12 @@ def filetypechange():
         os.rename(src, dst)
 
 
-# Checks for difference between playlist url and video url
-if "/playlist?" in url:
-
-    # Using YoutubeDL to get url of each video in playlist due to unfixed issues with pafy get_playlist and get_playlist2 methods
-    playlist = YoutubeDL().extract_info(url, download=False)
-    print(playlist["title"])
-    print("")
-    # Downloads each video with pafy
-    for item in playlist["entries"]:
-        print(item["title"])
-        url_item = item["webpage_url"]
-        print(url_item)
-        try:
-            src = pafy.new(url_item)
-            if file_type == "1":
-                video = src.getbest()
-                video.download(filepath=dir_path)
-            elif file_type == "2":
-                audio = src.getbestaudio()
-                audio.download(filepath=dir_path)
-            else:
-                print("Invalid input")
-            print("")
-        except Exception as e:
-            print("Couldn't download " + item["title"])
-            print(e)
-
-else:
-
-    # Downloads the video with pafy
-    src = pafy.new(url)
-    print(src.title)
-    if file_type == "1":
-        video = src.getbest()
-        video.download(filepath=dir_path)
-    elif file_type == "2":
-        audio = src.getbestaudio()
-        audio.download(filepath=dir_path)
-    else:
-        print("Invalid input")
-
-# Changes all other file types to the specified file type
-filetypechange()
-
-
-def filezip():
-    # Zips up the directory and deletes the original directory
+# zips up all files within the download folder, and deletes the original directory
+def filezip(dir_path):
     zip_path = dir_path + ".zip"
     contents = os.walk(dir_path)
     zip_file = zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED)
+    # Simply looping through all files in the folder and adding it to the zip file
     for root, folders, files in contents:
         for file_name in files:
             absolute_path = os.path.join(root, file_name)
@@ -123,5 +36,133 @@ def filezip():
     shutil.rmtree(dir_path)
 
 
-if zipbool == "1":
-    filezip()
+# Getting the location of the py file and getting, or creating, the initial directory to store the downloads
+def get_download_folder(path) -> str:
+    try:
+        if not os.path.exists(path + "\\Download\\"):
+            os.mkdir(path + "\\Download\\")
+        dir_path = path + "\\Download\\" + str(date.today()) + "_" + str(datetime.now().strftime("%H-%M-%S"))
+        os.mkdir(dir_path)
+        return dir_path
+    except:
+        print("ERROR! Couldn't make download folder. Aborting.")
+        exit(-1)
+
+
+def get_valid_file_extension(*extensions) -> str:
+    extension_str = ', '.join(extensions)
+    while True:
+        extension = input(f"Enter the required file extension: ({extension_str}): ").lower()
+        if extension in extensions:
+            return extension
+        else:
+            print(f"Enter a valid extension from: ({extension_str})")
+
+
+class FileType:
+    Video = 1
+    Audio = 2
+
+def get_file_type() -> FileType:
+    while True:
+        file_type = input("Enter 1 for video and 2 for only audio: ")
+        if file_type == '1':
+            return FileType.Video
+        elif file_type == '2':
+            return FileType.Audio
+        else:
+            print("Enter a valid type")
+
+
+def get_zip_bool() -> bool:
+    zip_str = input("Enter 1 to zip the files, anything else to leave files in a folder: ")
+    if zip_str == '1':
+        return True
+    else:
+        return False
+
+
+def get_audio_stream(yt, target_extension):
+    stream = yt.streams.get_audio_only(target_extension)
+    if stream:
+        return stream
+    else:
+        print(f"No {target_extension} streams available. Choosing the next best option.")
+        return yt.streams.get_audio_only()
+
+
+def get_video_stream(yt, target_extension):
+    streams = yt.streams.filter(file_extension=target_extension, progressive=True)
+    if streams:
+        return streams.get_highest_resolution()
+    else:
+        print(f"No {target_extension} streams available. Choosing the next best option.")
+        streams = yt.streams.filter(progressive=True)
+        return streams.get_highest_resolution()
+
+
+def download_single(url, file_type, target_extension, dir_path):
+    yt = YouTube(url)
+    print(f"Downloading: {yt.title}")
+
+    stream = None
+    if file_type == FileType.Video:
+        stream = get_video_stream(yt, target_extension)
+    elif file_type == FileType.Audio:
+        stream = get_audio_stream(yt, target_extension)
+
+    try:
+        stream.download(output_path=dir_path)
+        print(f"{yt.title} downloaded successfully")
+    except Exception as e:
+        print(f"{yt.title} was not downloaded")
+        print(e)
+
+
+def download_channel(url, file_type, target_extension, dir_path):
+    channel = Channel(url)
+    print(f'Downloading videos by: {channel.channel_name}')
+    for url in channel.video_urls:
+        print(url)
+        download_single(url, file_type, target_extension, dir_path)
+
+
+def download_playlist(playlist_url, file_type, target_extension, dir_path):
+    playlist = Playlist(playlist_url)
+    print(f"Downloading videos from {playlist.title}")
+    for url in playlist.video_urls:
+        download_single(url, file_type, target_extension, dir_path)
+
+
+def main():
+    path = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
+    dir_path = get_download_folder(path)
+
+    url = input("Enter the playlist, channel, or video URL: ")
+    file_type = get_file_type()
+        
+    file_extension = ""
+    if file_type == FileType.Video:
+            file_extension = get_valid_file_extension('mp4', 'mov', 'avi', 'mkv', 'wmv', 'webm')
+    elif file_type == FileType.Audio:
+            file_extension = get_valid_file_extension('mp3', 'wav', 'aac', 'ogg', 'wma', 'flac', 'm4a')
+
+    zip_bool = get_zip_bool()
+
+    # Checks for difference between playlist, channel and video url
+    if '/playlist?' in url:
+        download_playlist(url, file_type, file_extension, dir_path)
+    elif '/channel/' in url or '/@' in url:
+        download_channel(url, file_type, file_extension, dir_path)
+    else:
+        download_single(url, file_type, file_extension, dir_path)
+        
+    # Changes all other file types to the specified file type
+    filetypechange(dir_path, file_extension)
+    
+    if zip_bool:
+        filezip(dir_path)
+
+
+if __name__ == '__main__':
+    main()
