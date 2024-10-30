@@ -10,7 +10,7 @@ from pytubefix import Channel
 
 # Change all files of incorrect type to the specified type
 def filetypechange(dir_path, file_extension):
-    for count, filename in enumerate(os.listdir(dir_path)):
+    for filename in os.listdir(dir_path):
         # Gets the original file path
         src = dir_path + "\\" + filename
         # Gets the name of the file without the old extension and appends the new extension
@@ -27,7 +27,7 @@ def filezip(dir_path):
     for root, folders, files in contents:
         for file_name in files:
             absolute_path = os.path.join(root, file_name)
-            relative_path = absolute_path.replace(directory_path + '\\', '')
+            relative_path = absolute_path.replace(dir_path + '\\', '')
             print(f"Adding {absolute_path} to archive.")
             zip_file.write(absolute_path, relative_path)
     print(f"{zip_path} created successfully.")
@@ -129,9 +129,14 @@ def download_single(url, file_type, target_extension, dir_path):
 def download_channel(url, file_type, target_extension, dir_path):
     channel = Channel(url)
     print(f'Downloading videos by: {channel.channel_name}')
+    # Check if all video urls available
     for url in channel.video_urls:
         print(url)
         download_single(url, file_type, target_extension, dir_path)
+    home = channel.home
+    for i in home:
+        if type(i) is Playlist:
+            download_playlist(i.playlist_url, file_type, target_extension, dir_path)
 
 
 # Download all videos from a given playlist
@@ -143,7 +148,7 @@ def download_playlist(playlist_url, file_type, target_extension, dir_path):
 
 
 def main():
-    path = os.path.dirname(os.path.realpath('YoutubeVideoDownloader.py'))
+    path = os.path.dirname(os.path.realpath(__file__))
     dir_path = get_download_folder(path)
 
     url = input("Enter the playlist, channel, or video URL: ")
