@@ -1,4 +1,3 @@
-# ui_handler.py
 from config import FileType, VALID_VIDEO_FILE_TYPES, VALID_AUDIO_FILE_TYPES, AVAILABLE_RESOLUTIONS
 
 class UIHandler:

@@ -1,16 +1,15 @@
-# YoutubeVideoDownloader.py
 from pathlib import Path
 from config import DownloadConfig, FileType
 from ui_handler import UIHandler
 from video_downloader import VideoDownloader
-from playlist_downloader import PlaylistDownloader
+from batch_downloader import BatchDownloader
 from file_manager import FileManager
 
 class YouTubeDownloaderApp:
     def __init__(self):
         self.config = DownloadConfig()
         self.video_downloader = VideoDownloader()
-        self.playlist_downloader = PlaylistDownloader()
+        self.playlist_downloader = BatchDownloader()
         self.file_manager = FileManager()
 
     def setup_configuration(self):

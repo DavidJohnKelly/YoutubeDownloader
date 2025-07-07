@@ -1,4 +1,3 @@
-# video_downloader.py
 from pytubefix import YouTube
 from pathlib import Path
 from tqdm import tqdm
@@ -8,7 +7,7 @@ from ui_handler import UIHandler
 
 class VideoDownloader:
     def __init__(self):
-        self.progress_bar: tqdm = None
+        self.progress_bar: tqdm | None = None
 
     def progress_hook(self, stream, chunk, bytes_remaining):
         """Progress hook for download progress bar"""
@@ -121,7 +120,7 @@ class VideoDownloader:
             output_filename = f"{yt.title}.{target_extension}"
             output_path = dir_path / output_filename
             
-            if StreamHandler.merge_video_audio(video_path, audio_path, output_path):
+            if StreamHandler.merge_video_audio(video_path, audio_path, output_path, yt.length):
                 UIHandler.print_success(f"'{yt.title}' downloaded and merged successfully!")
                 return True
             else:

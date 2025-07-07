@@ -1,1 +1,2 @@
 pytubefix>=8.2.0
+ffmpeg_python>=2.0.12

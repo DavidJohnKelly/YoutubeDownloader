@@ -1,4 +1,3 @@
-# file_manager.py
 import shutil
 import zipfile
 from pathlib import Path

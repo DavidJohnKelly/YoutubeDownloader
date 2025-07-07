@@ -1,9 +1,8 @@
-# stream_handler.py
 from pytubefix import YouTube
 from config import FileType
-import os
-import subprocess
 from pathlib import Path
+from ffmpeg import FFmpeg, Progress
+from tqdm import tqdm
 
 class StreamHandler:
     @staticmethod
@@ -56,7 +55,7 @@ class StreamHandler:
         return video_stream, audio_stream
 
     @staticmethod
-    def get_stream(yt: YouTube, file_type: FileType, target_extension: str, resolution: str = None):
+    def get_stream(yt: YouTube, file_type: FileType, target_extension: str, resolution: str = ""):
         """Get appropriate stream based on file type"""
         if file_type == FileType.VIDEO:
             return StreamHandler.get_video_stream(yt, target_extension, resolution)
@@ -64,25 +63,50 @@ class StreamHandler:
             return StreamHandler.get_audio_stream(yt, target_extension), None
 
     @staticmethod
-    def merge_video_audio(video_path: Path, audio_path: Path, output_path: Path) -> bool:
-        """Merge video and audio files using ffmpeg"""
+    def merge_video_audio(video_path: Path, audio_path: Path, output_path: Path, file_seconds: int) -> bool:
+        """Merge video and audio files using ffmpeg-python"""
         try:
-            cmd = [
-                'ffmpeg', '-i', str(video_path), '-i', str(audio_path),
-                '-c:v', 'copy', '-c:a', 'aac', '-y', str(output_path)
-            ]
+            # Initialize progress bar
+            progress_bar = tqdm(
+                total=100,  # Percentage scale (0-100)
+                unit='%',
+                bar_format='{l_bar}{bar}| {n:.0f}% [{elapsed}<{remaining}]'
+            )
             
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            last_progress = 0
+
+            def on_progress(progress: Progress):
+                """Update progress bar based on time progress"""
+                nonlocal last_progress
+                try:
+                    # current progress (0-1)
+                    current_progress = min(progress.time.total_seconds() / float(file_seconds), 1.0)
+                    current_percent = current_progress * 100
+                    progress_bar.update(current_percent - last_progress)
+                    last_progress = current_percent
+                except Exception as e:
+                    print(f"Progress error: {str(e)}")
+
+            ffmpeg = (
+                FFmpeg()
+                .input(str(video_path))
+                .input(str(audio_path))
+                .output(str(output_path), vcodec='copy', acodec='aac')
+            )
+
+            ffmpeg.on("progress", on_progress)
+            ffmpeg.execute()
+
+            if last_progress < 100:
+                progress_bar.update(100 - last_progress)
             
-            if result.returncode == 0:
-                # Clean up temporary files
-                video_path.unlink()
-                audio_path.unlink()
-                return True
-            else:
-                print(f"FFmpeg error: {result.stderr}")
-                return False
-                
+            progress_bar.close()
+
+            # Clean up temporary files
+            video_path.unlink(missing_ok=True)
+            audio_path.unlink(missing_ok=True)
+
+            return True
         except FileNotFoundError:
             print("❌ FFmpeg not found. Please install FFmpeg to merge high-quality video streams.")
             print("   Keeping separate video and audio files.")

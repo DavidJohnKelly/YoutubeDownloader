@@ -1,4 +1,3 @@
-# config.py
 from enum import Enum
 from pathlib import Path
 
@@ -19,4 +18,4 @@ class DownloadConfig:
         self.file_extension: str = 'mp4'
         self.resolution: str = '720p'
         self.create_zip: bool = False
-        self.download_path: Path = None
+        self.download_path: Path = Path()

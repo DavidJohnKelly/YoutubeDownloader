@@ -5,7 +5,7 @@ from config import FileType
 from video_downloader import VideoDownloader
 from ui_handler import UIHandler
 
-class PlaylistDownloader:
+class BatchDownloader:
     def __init__(self):
         self.video_downloader = VideoDownloader()
 
